@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.zookeeper.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.zookeeper.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.zookeeper.name }}
+    spec:
+      containers:
+        - name: {{ .Values.zookeeper.name }}
+          image: {{ .Values.zookeeper.image }}
+          ports:
+            - containerPort: {{ .Values.zookeeper.containerPort }}
+          env:
+            - name: ZOOKEEPER_CLIENT_PORT
+              value: "{{ .Values.zookeeper.environment.ZOOKEEPER_CLIENT_PORT }}"
+---
+# zookeeper-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.zookeeper.name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.zookeeper.containerPort }}
+      targetPort: {{ .Values.zookeeper.containerPort }}
+  selector:
+    app: {{ .Values.zookeeper.name }}

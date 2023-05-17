@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.10.3-pg15
+    container_name: timescaledb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password1
+      POSTGRES_DB: public
+      PGCONNECT_TIMEOUT: 30m
+      PGIDLE_TIMEOUT: 30m
+      TIMESCALEDB_TELEMETRY: basic
+      TIMESCALEDB_LICENSE: apache
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+
+  zookeeper:
+    image: 'confluentinc/cp-zookeeper:latest'
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: 'confluentinc/cp-kafka:latest'
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INSIDE://:19092,OUTSIDE://:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:19092,OUTSIDE://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:19092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  kowl:
+    image: quay.io/cloudhut/kowl:latest
+    depends_on:
+      - kafka
+    ports:
+      - "7080:8080"
+    environment:
+      KAFKA_BROKERS: kafka:19092
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+
+volumes:
+  timescaledb_data:

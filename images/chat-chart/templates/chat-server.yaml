@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.chatserver.name }}
+spec:
+  replicas: {{ .Values.chatserver.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.chatserver.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.chatserver.name }}
+    spec:
+      containers:
+        - name: {{ .Values.chatserver.name }}
+          image: {{ .Values.chatserver.image }}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: {{ .Values.chatserver.containerPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.chatserver.name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: {{ .Values.chatserver.containerPort }}
+  selector:
+    app: {{ .Values.chatserver.name }}

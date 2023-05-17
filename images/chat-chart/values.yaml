@@ -1,0 +1,149 @@
+# Default values for chat-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+timescaledb:
+  service:
+    name: timescaledb
+    port: 5432
+  containerPort: 5432
+  image: timescale/timescaledb:2.10.3-pg15
+  containerName: timescaledb
+  env:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password1
+    POSTGRES_DB: public
+    TIMESCALEDB_TELEMETRY: basic
+    TIMESCALEDB_LICENSE: apache
+  ports:
+    - name: postgres
+      port: 5432
+  persistence:
+    enabled: true
+    size: 10Gi
+
+zookeeper:
+  name: zookeeper
+  image: confluentinc/cp-zookeeper:latest
+  containerPort: 2181
+  environment:
+    ZOOKEEPER_CLIENT_PORT: 2181
+
+
+kafka:
+  name: chat-kafka
+  serviceName: chat-kafka
+  image: confluentinc/cp-kafka:latest
+  containerPort: 19092
+  environment:
+    KAFKA_BROKER_ID: 1
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    KAFKA_LISTENERS: INSIDE://:19092
+    KAFKA_ADVERTISED_LISTENERS: INSIDE://chat-kafka:19092
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT
+    KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+schemaRegistry:
+  name: schema-registry
+  serviceName: schema-registry-sr
+  image: confluentinc/cp-schema-registry:latest
+  containerPort: 8081
+  environment:
+    SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://chat-kafka:19092
+    SCHEMA_REGISTRY_HOST_NAME: schema-registry
+    SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+kowl:
+  name: kowl
+  image: quay.io/cloudhut/kowl:latest
+  containerPort: 8080
+  serviceType: LoadBalancer
+  environment:
+    KAFKA_BROKERS: chat-kafka:19092
+
+chatserver:
+  name: chat-server
+  replicaCount: 1
+  image: chat-server
+  containerPort: 8080

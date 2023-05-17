@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.example.chat";
+
+package chat;
+
+// The chat service definition
+service ChatService {
+  // Bidirectional streaming of chat messages
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+// The chat message structure
+message ChatMessage {
+  string user = 1;       // The user who sent the message
+  string dest = 2;       // The identifier to where the message is sent
+  string message = 3;    // The content of the message
+  int64 timestamp = 4;   // The timestamp when the message was sent (e.g., Unix timestamp)
+}

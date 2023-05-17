@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.kafka.serviceName }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.kafka.serviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.kafka.serviceName }}
+    spec:
+      containers:
+        - name: {{ .Values.kafka.serviceName }}
+          image: {{ .Values.kafka.image }}
+          ports:
+            - containerPort: {{ .Values.kafka.containerPort }}
+          env:
+            - name: KAFKA_BROKER_ID
+              value: "{{ .Values.kafka.environment.KAFKA_BROKER_ID }}"
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: "{{ .Values.kafka.environment.KAFKA_ZOOKEEPER_CONNECT }}"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "{{ .Values.kafka.environment.KAFKA_ADVERTISED_LISTENERS }}"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "{{ .Values.kafka.environment.KAFKA_LISTENER_SECURITY_PROTOCOL_MAP }}"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "{{ .Values.kafka.environment.KAFKA_INTER_BROKER_LISTENER_NAME }}"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "{{ .Values.kafka.environment.KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR }}"
+---
+# kafka-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.kafka.serviceName }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.kafka.containerPort }}
+      targetPort: {{ .Values.kafka.containerPort }}
+  selector:
+    app: {{ .Values.kafka.serviceName }}
