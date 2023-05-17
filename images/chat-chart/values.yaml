@@ -145,5 +145,7 @@ kowl:
 chatserver:
   name: chat-server
   replicaCount: 1
-  image: chat-server
+  image: fyimbtmn/chat-server:latest
   containerPort: 8080
+  poolMaxIdleTime: "30m"
+  poolMaxSize: "10"

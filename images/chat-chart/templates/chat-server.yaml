@@ -15,9 +15,30 @@ spec:
       containers:
         - name: {{ .Values.chatserver.name }}
           image: {{ .Values.chatserver.image }}
-          imagePullPolicy: Never
           ports:
             - containerPort: {{ .Values.chatserver.containerPort }}
+          env:
+            - name: SPRING_R2DBC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: chat-server-secret
+                  key: SPRING_R2DBC_URL
+            - name: SPRING_R2DBC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: chat-server-secret
+                  key: SPRING_R2DBC_USERNAME
+            - name: SPRING_R2DBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chat-server-secret
+                  key: SPRING_R2DBC_PASSWORD
+            - name: SPRING_KAFKA_CONSUMER_BOOTSTRAPSERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: chat-server-secret
+                  key: SPRING_KAFKA_CONSUMER_BOOTSTRAPSERVERS
+
 ---
 apiVersion: v1
 kind: Service
